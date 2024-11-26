@@ -1,44 +1,51 @@
+using Microsoft.Extensions.Options;
+using OnCallProber.Configs;
+using OnCallProber.JobsSetup;
+using OnCallProber.Probes;
+using OnCallProber.Services;
+using Prometheus;
+
+Metrics.SuppressDefaultMetrics();
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+var metricsServerPort = builder.Configuration.GetValue<int>("ONCALL_EXPORTER_METRICS_PORT");
+var url = builder.Configuration.GetValue<string>("ONCALL_EXPORTER_API_URL") ?? "http://oncall.local";
+
+builder.Services.Configure<OnCallExporterConfiguration>(config =>
+{
+    config.ApiUrl = url;
+    config.MetricsPort = metricsServerPort;
+    config.LogLevel =
+        Enum.Parse<LogLevel>(builder.Configuration.GetValue<string>("ONCALL_EXPORTER_LOG_LEVEL") ?? "Information");
+    config.ScrapeInterval = builder.Configuration.GetValue<int>("ONCALL_EXPORTER_SCRAPE_INTERVAL");
+
+    //todo: https://github.com/linkedin/oncall/issues/262
+    config.AppKey = builder.Configuration.GetValue<string>("ONCALL_EXPORTER_APP_KEY");
+    config.AppName = builder.Configuration.GetValue<string>("ONCALL_EXPORTER_APP_NAME");
+});
+
+builder.Services
+    .ConfigureOptions<ProbeBackgroundJobSetup>()
+    .AddScoped<OnCallTeamService>()
+    .AddScoped<IDefaultMetricsExporter, TeamMetricsExporter>()
+    .AddScoped<AuthorizationHeaderService>()
+    .AddScoped<SignatureEncoder>(x =>
+    {
+        var config = x.GetRequiredService<IOptions<OnCallExporterConfiguration>>().Value;
+        return new SignatureEncoder(config.AppKey ?? "");
+    });
+
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+
+builder.Services.AddHttpClient("OnCallProberClient", config =>
+{
+    config.BaseAddress = new Uri(url);
+    config.Timeout = new TimeSpan(0, 0, 30);
+});
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
-app.UseHttpsRedirection();
-
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
-    {
-        var forecast = Enumerable.Range(1, 5).Select(index =>
-                new WeatherForecast
-                (
-                    DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                    Random.Shared.Next(-20, 55),
-                    summaries[Random.Shared.Next(summaries.Length)]
-                ))
-            .ToArray();
-        return forecast;
-    })
-    .WithName("GetWeatherForecast")
-    .WithOpenApi();
+app.UseMetricServer(port: metricsServerPort);
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int) (TemperatureC / 0.5556);
-}
