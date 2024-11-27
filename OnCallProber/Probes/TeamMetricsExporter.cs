@@ -1,4 +1,6 @@
-﻿using Prometheus;
+﻿using Microsoft.Extensions.Options;
+using OnCallProber.Configs;
+using Prometheus;
 using ITimer = Prometheus.ITimer;
 
 namespace OnCallProber.Probes;
@@ -6,27 +8,39 @@ namespace OnCallProber.Probes;
 public class TeamMetricsExporter : IDefaultMetricsExporter
 {
     private const string CreateTeamScenarioName = "prober_create_team_scenario";
-    private const string Label = "oncall.prober";
-    
-    private static readonly Counter ProberCreateTeamScenarioTotal =
-        Metrics.CreateCounter($"{CreateTeamScenarioName}_total",
+
+    public TeamMetricsExporter(IOptions<OnCallExporterConfiguration> options)
+    {
+        var label = options.Value.AppName ?? "";
+        ProberCreateTeamScenarioTotal = 
+            Metrics.CreateCounter($"{CreateTeamScenarioName}_total",
             "Total count of runs the create team scenario to oncall API",
-            Label);
+            label);
+        
+        ProberCreateTeamScenarioSuccessTotal =
+            Metrics.CreateCounter($"{CreateTeamScenarioName}_success_total",
+                "Total count of success runs the create team scenario to oncall API",
+                label);
+        
+        ProberCreateTeamScenarioFailureTotal =
+            Metrics.CreateCounter($"{CreateTeamScenarioName}_fail",
+                "Total count of failed runs the create team scenario to oncall API",
+                label);
+        
+        ProberCreateTeamScenarioDurationSeconds =
+            Metrics.CreateHistogram($"{CreateTeamScenarioName}_duration_seconds",
+                "Duration in seconds of runs the create team scenario to oncall API",
+                label);
+    }
+
+    private Counter ProberCreateTeamScenarioTotal { get; set; }
+        
     
-    private static readonly Counter ProberCreateTeamScenarioSuccessTotal =
-        Metrics.CreateCounter($"{CreateTeamScenarioName}_success_total",
-            "Total count of success runs the create team scenario to oncall API",
-            Label);
+    private Counter ProberCreateTeamScenarioSuccessTotal { get; set; }
     
-    private static readonly Counter ProberCreateTeamScenarioFailureTotal =
-        Metrics.CreateCounter($"{CreateTeamScenarioName}_fail",
-            "Total count of failed runs the create team scenario to oncall API",
-            Label);
+    private Counter ProberCreateTeamScenarioFailureTotal { get; set; }
     
-    private static readonly Gauge ProberCreateTeamScenarioDurationSeconds =
-        Metrics.CreateGauge($"{CreateTeamScenarioName}_duration_seconds",
-            "Duration in seconds of runs the create team scenario to oncall API",
-            Label);
+    private Histogram ProberCreateTeamScenarioDurationSeconds { get; set; }
 
     public void IncreaseProbeTotal() => ProberCreateTeamScenarioTotal.Inc();
 

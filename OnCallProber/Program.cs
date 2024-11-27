@@ -4,20 +4,17 @@ using OnCallProber.JobsSetup;
 using OnCallProber.Probes;
 using OnCallProber.Services;
 using Prometheus;
+using Quartz;
 
 Metrics.SuppressDefaultMetrics();
 
 var builder = WebApplication.CreateBuilder(args);
 
-var metricsServerPort = builder.Configuration.GetValue<int>("ONCALL_EXPORTER_METRICS_PORT");
 var url = builder.Configuration.GetValue<string>("ONCALL_EXPORTER_API_URL") ?? "http://oncall.local";
 
 builder.Services.Configure<OnCallExporterConfiguration>(config =>
 {
     config.ApiUrl = url;
-    config.MetricsPort = metricsServerPort;
-    config.LogLevel =
-        Enum.Parse<LogLevel>(builder.Configuration.GetValue<string>("ONCALL_EXPORTER_LOG_LEVEL") ?? "Information");
     config.ScrapeInterval = builder.Configuration.GetValue<int>("ONCALL_EXPORTER_SCRAPE_INTERVAL");
 
     //todo: https://github.com/linkedin/oncall/issues/262
@@ -26,9 +23,18 @@ builder.Services.Configure<OnCallExporterConfiguration>(config =>
 });
 
 builder.Services
+    .AddEndpointsApiExplorer()
+    .AddQuartz();
+
+builder.Services.AddQuartzHostedService(options =>
+{
+    options.WaitForJobsToComplete = true;
+});
+
+builder.Services
     .ConfigureOptions<ProbeBackgroundJobSetup>()
     .AddScoped<OnCallTeamService>()
-    .AddScoped<IDefaultMetricsExporter, TeamMetricsExporter>()
+    .AddSingleton<IDefaultMetricsExporter, TeamMetricsExporter>()
     .AddScoped<AuthorizationHeaderService>()
     .AddScoped<SignatureEncoder>(x =>
     {
@@ -46,6 +52,8 @@ builder.Services.AddHttpClient("OnCallProberClient", config =>
 
 var app = builder.Build();
 
-app.UseMetricServer(port: metricsServerPort);
+app.UseMetricServer();
 
-app.Run();
+app.UseHttpsRedirection();
+
+await app.RunAsync();

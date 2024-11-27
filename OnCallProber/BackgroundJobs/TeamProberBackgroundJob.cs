@@ -11,14 +11,12 @@ public class TeamProberBackgroundJob : IJob
 {
     private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly ILogger<TeamProberBackgroundJob> _logger;
-    private readonly OnCallExporterConfiguration _config;
     
     public TeamProberBackgroundJob(IServiceScopeFactory serviceScopeFactory, 
-        ILogger<TeamProberBackgroundJob> logger, IOptions<OnCallExporterConfiguration> config)
+        ILogger<TeamProberBackgroundJob> logger)
     {
         _serviceScopeFactory = serviceScopeFactory;
         _logger = logger;
-        _config = config.Value;
     }
 
     public async Task Execute(IJobExecutionContext context)
@@ -31,9 +29,9 @@ public class TeamProberBackgroundJob : IJob
         _logger.LogDebug("Attempt to create a new team {@Team}", team);
         teamMetricsExporter.IncreaseProbeTotal();
 
-        var timer = teamMetricsExporter.NewTimer();
+        using var timer = teamMetricsExporter.NewTimer();
         var result = await teamMetricsService.CreateTeam(team);
-        timer.Dispose();
+        _logger.LogDebug("Duration of attempt to create a new team = {Duration}", timer.ObserveDuration());
         
         if (result)
         {
@@ -42,7 +40,7 @@ public class TeamProberBackgroundJob : IJob
         }
         else
         {
-            _logger.LogDebug("Failed to create new team {@Event}.", team);
+            _logger.LogDebug("Failed to create new team {@Team}.", team);
             teamMetricsExporter.IncreaseProbeFailure();
         }
     }
