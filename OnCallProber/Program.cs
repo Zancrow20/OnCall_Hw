@@ -10,17 +10,9 @@ Metrics.SuppressDefaultMetrics();
 
 var builder = WebApplication.CreateBuilder(args);
 
-var url = builder.Configuration.GetValue<string>("ONCALL_EXPORTER_API_URL") ?? "http://oncall.local";
+var onCall = builder.Configuration.GetSection("OnCall"); 
 
-builder.Services.Configure<OnCallExporterConfiguration>(config =>
-{
-    config.ApiUrl = url;
-    config.ScrapeInterval = builder.Configuration.GetValue<int>("ONCALL_EXPORTER_SCRAPE_INTERVAL");
-
-    //todo: https://github.com/linkedin/oncall/issues/262
-    config.AppKey = builder.Configuration.GetValue<string>("ONCALL_EXPORTER_APP_KEY");
-    config.AppName = builder.Configuration.GetValue<string>("ONCALL_EXPORTER_APP_NAME");
-});
+builder.Services.Configure<OnCallExporterConfiguration>(onCall);
 
 builder.Services
     .AddEndpointsApiExplorer()
@@ -46,7 +38,7 @@ builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddHttpClient("OnCallProberClient", config =>
 {
-    config.BaseAddress = new Uri(url);
+    config.BaseAddress = new Uri(onCall.GetValue<string>("ExporterApiUrl") ?? string.Empty);
     config.Timeout = new TimeSpan(0, 0, 30);
 });
 

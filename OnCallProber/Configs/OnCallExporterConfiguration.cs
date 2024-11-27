@@ -2,6 +2,7 @@
 
 public class OnCallExporterConfiguration
 {
+    public string OnCall = "OnCall";
     public string? ApiUrl { get; set; }
     public int ScrapeInterval { get; set; }
     
