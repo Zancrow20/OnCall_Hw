@@ -11,6 +11,7 @@ public class TeamProberBackgroundJob : IJob
 {
     private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly ILogger<TeamProberBackgroundJob> _logger;
+    private int _iterator = 0;
     
     public TeamProberBackgroundJob(IServiceScopeFactory serviceScopeFactory, 
         ILogger<TeamProberBackgroundJob> logger)
@@ -25,7 +26,11 @@ public class TeamProberBackgroundJob : IJob
         var teamMetricsService = scope.ServiceProvider.GetRequiredService<OnCallTeamService>();
         var teamMetricsExporter = scope.ServiceProvider.GetRequiredService<IDefaultMetricsExporter>();
         
-        var team = new Team("test", "US/Pacific", "team-foo@example.com", "#team-foo");
+        var team = new Team(
+            $"test-{_iterator++}", 
+            "US/Pacific", 
+            "team-foo@example.com", 
+            $"#team-foo");
         _logger.LogDebug("Attempt to create a new team {@Team}", team);
         teamMetricsExporter.IncreaseProbeTotal();
 
