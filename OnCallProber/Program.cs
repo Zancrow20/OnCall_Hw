@@ -24,6 +24,7 @@ builder.Services.AddQuartzHostedService(options =>
 });
 
 builder.Services
+    .AddLogging(log => log.AddConsole())
     .ConfigureOptions<ProbeBackgroundJobSetup>()
     .AddScoped<OnCallTeamService>()
     .AddSingleton<IDefaultMetricsExporter, TeamMetricsExporter>()

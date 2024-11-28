@@ -23,7 +23,7 @@ public class TeamMetricsExporter : IDefaultMetricsExporter
                 label);
         
         ProberCreateTeamScenarioFailureTotal =
-            Metrics.CreateCounter($"{CreateTeamScenarioName}_fail",
+            Metrics.CreateCounter($"{CreateTeamScenarioName}_fail_total",
                 "Total count of failed runs the create team scenario to oncall API",
                 label);
         
