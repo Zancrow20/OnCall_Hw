@@ -1,0 +1,24 @@
+﻿apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prober
+  labels:
+    app.kubernetes.io/name: prober
+    app.kubernetes.io/component: web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: prober
+      app.kubernetes.io/component: web
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: prober
+        app.kubernetes.io/component: web
+    spec:
+      containers:
+        - name:  oncall-prober
+          image: zancrow20/oncall-prober
+          ports:
+            - containerPort: 8080

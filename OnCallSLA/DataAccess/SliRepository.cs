@@ -15,7 +15,7 @@ public class SliRepository
     public async Task Add(Sli sli, CancellationToken cancellationToken)
     {
         const string sql = """
-                           USE Sla;
+                           USE sla;
                            INSERT INTO `sli`(datetime, name, slo, value, isBad) VALUES (@DateTime, @Name, @Slo, @Value, @IsBad);
                            """;
         var command = new MySqlCommand(sql, _mySqlConnection);
@@ -28,6 +28,37 @@ public class SliRepository
         await _mySqlConnection.OpenAsync(cancellationToken);
         await command.ExecuteNonQueryAsync(cancellationToken);
         await _mySqlConnection.CloseAsync();
+    }
+    
+    public async Task<List<Sli>> Get(CancellationToken cancellationToken)
+    {
+        List<Sli> sliList = []; 
+        const string sql = """
+                           USE sla;
+                           SELECT * FROM `sli`;
+                           """;
+        
+        var command = new MySqlCommand(sql, _mySqlConnection);
+        await _mySqlConnection.OpenAsync(cancellationToken);
+        
+        var reader  = await command.ExecuteReaderAsync(cancellationToken);
+        if (reader.HasRows) 
+        {
+            while (await reader.ReadAsync(cancellationToken))
+            {
+                var dateTime = reader.GetDateTimeOffset("datetime");
+                var name = reader.GetString("name");
+                var slo = reader.GetFloat("slo");
+                var value = reader.GetFloat("value");
+                var isBad = reader.GetBoolean("isBad");
+                
+                sliList.Add(new Sli(dateTime, name, slo, value, isBad));
+            }
+        }
+ 
+        await reader.CloseAsync();
+        await _mySqlConnection.CloseAsync();
+        return sliList;
     }
 }
 

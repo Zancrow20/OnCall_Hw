@@ -29,4 +29,10 @@ builder.Services
 
 var app = builder.Build();
 
+app.MapGet("/sli", async (SliRepository repository, CancellationToken cancellationToken) =>
+{
+    var response = await repository.Get(cancellationToken);
+    return Results.Ok(response);
+});
+
 await app.RunAsync();
