@@ -21,7 +21,7 @@ public class BackgroundJobSetup : IConfigureOptions<QuartzOptions>
                 .WithIdentity(jobKey))
             .AddTrigger(trigger => trigger
                 .ForJob(jobKey)
-                .WithIdentity("team_sli_job", "sla")
+                .WithIdentity("user_sli_job", "sla")
                 .WithSimpleSchedule(x => x
                     .WithIntervalInSeconds(_interval)
                     .RepeatForever())

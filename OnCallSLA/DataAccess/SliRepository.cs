@@ -36,8 +36,8 @@ public static class DbMigrations
     public static async Task BaseMigrate(this MySqlConnection conn, CancellationToken cancellationToken)
     {
         const string sql = """
-                           CREATE DATABASE IF NOT EXISTS Sla;
-                           USE Sla;
+                           CREATE DATABASE IF NOT EXISTS sla;
+                           USE sla;
                            CREATE TABLE IF NOT EXISTS `sli`(
                                datetime datetime not null default NOW(),
                                name varchar(255) not null,

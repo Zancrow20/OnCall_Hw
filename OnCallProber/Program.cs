@@ -26,14 +26,8 @@ builder.Services.AddQuartzHostedService(options =>
 builder.Services
     .AddLogging(log => log.AddConsole())
     .ConfigureOptions<ProbeBackgroundJobSetup>()
-    .AddScoped<OnCallTeamService>()
-    .AddSingleton<IDefaultMetricsExporter, TeamMetricsExporter>()
-    .AddScoped<AuthorizationHeaderService>()
-    .AddScoped<SignatureEncoder>(x =>
-    {
-        var config = x.GetRequiredService<IOptions<OnCallExporterConfiguration>>().Value;
-        return new SignatureEncoder(config.AppKey ?? "");
-    });
+    .AddScoped<OnCallUserService>()
+    .AddSingleton<IDefaultMetricsExporter, UserMetricsExporter>();
 
 builder.Services.AddEndpointsApiExplorer();
 

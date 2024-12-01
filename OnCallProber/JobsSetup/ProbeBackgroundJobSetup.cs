@@ -16,10 +16,10 @@ public class ProbeBackgroundJobSetup : IConfigureOptions<QuartzOptions>
 
     public void Configure(QuartzOptions options)
     {
-        var jobKey = JobKey.Create(nameof(TeamProberBackgroundJob));
+        var jobKey = JobKey.Create(nameof(UserProberBackgroundJob));
         
         options
-            .AddJob<TeamProberBackgroundJob>(jobBuilder => jobBuilder
+            .AddJob<UserProberBackgroundJob>(jobBuilder => jobBuilder
                 .WithIdentity(jobKey))
             .AddTrigger(trigger => trigger
                 .ForJob(jobKey)
