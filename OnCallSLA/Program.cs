@@ -2,7 +2,10 @@ using MySqlConnector;
 using OnCallSLA.BackgroundJobs;
 using OnCallSLA.DataAccess;
 using OnCallSLA.Services;
+using Prometheus;
 using Quartz;
+
+Metrics.SuppressDefaultMetrics();
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,10 +32,6 @@ builder.Services
 
 var app = builder.Build();
 
-app.MapGet("/sli", async (SliRepository repository, CancellationToken cancellationToken) =>
-{
-    var response = await repository.Get(cancellationToken);
-    return Results.Ok(response);
-});
+app.UseMetricServer();
 
 await app.RunAsync();

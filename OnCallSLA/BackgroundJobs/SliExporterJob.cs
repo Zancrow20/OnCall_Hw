@@ -11,19 +11,19 @@ public class SliExporterJob(SliRepository repository, ILogger<SliExporterJob> lo
 {
     private const string Scenario = "prober_create_user_scenario";
     private const string SuccessTotalName = $"{Scenario}_success_total";
-    private const string FailedTotalName = $"{Scenario}_fail_total";
+    private const string TotalName = $"{Scenario}_total";
     private const string DurationName = $"{Scenario}_duration_seconds";
 
     public async Task Execute(IJobExecutionContext context)
     {
         await SaveSuccessTotal(context);
-        await SaveFailedTotal(context);
+        await SaveTotal(context);
         await SaveDuration(context);
     }
 
     public async Task SaveSuccessTotal(IJobExecutionContext context)
     {
-        var time = DateTimeOffset.UtcNow;
+        var time = context.FireTimeUtc;
         
         var total = await prometheusClient.GetLastValue(
             $"increase({SuccessTotalName}[1m])", 
@@ -45,14 +45,14 @@ public class SliExporterJob(SliRepository repository, ILogger<SliExporterJob> lo
         await repository.Add(sli, context.CancellationToken);
     }
 
-    public async Task SaveFailedTotal(IJobExecutionContext context)
+    public async Task SaveTotal(IJobExecutionContext context)
     {
-        var time = DateTimeOffset.UtcNow;
+        var time = context.FireTimeUtc;
         
         var total = await prometheusClient.GetLastValue(
-            $"increase({FailedTotalName}[1m])", 
+            $"increase({TotalName}[1m])", 
             time, 
-            defaultValue: "100");
+            defaultValue: "0");
 
         if (!float.TryParse(total, CultureInfo.InvariantCulture, out var value))
         {
@@ -64,14 +64,14 @@ public class SliExporterJob(SliRepository repository, ILogger<SliExporterJob> lo
             return;
         }
         
-        var sli = new CreateUserSli(time, SuccessTotalName, 0, value, value > 0);
+        var sli = new CreateUserSli(time, TotalName, 1, value, value < 1);
 
         await repository.Add(sli, context.CancellationToken);
     }
     
     public async Task SaveDuration(IJobExecutionContext context)
     {
-        var time = DateTimeOffset.UtcNow;
+        var time = context.FireTimeUtc;
         
         var duration = await prometheusClient.GetLastValue(
             DurationName, 

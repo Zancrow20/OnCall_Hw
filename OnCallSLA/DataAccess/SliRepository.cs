@@ -30,15 +30,17 @@ public class SliRepository
         await _mySqlConnection.CloseAsync();
     }
     
-    public async Task<List<Sli>> Get(CancellationToken cancellationToken)
+    public async Task<List<Sli>> Get(CancellationToken cancellationToken, DateTimeOffset start)
     {
         List<Sli> sliList = []; 
         const string sql = """
                            USE sla;
-                           SELECT * FROM `sli`;
+                           SELECT * FROM `sli`
+                           WHERE datetime >= @DateTime;
                            """;
         
         var command = new MySqlCommand(sql, _mySqlConnection);
+        command.Parameters.AddWithValue("@DateTime", start);
         await _mySqlConnection.OpenAsync(cancellationToken);
         
         var reader  = await command.ExecuteReaderAsync(cancellationToken);

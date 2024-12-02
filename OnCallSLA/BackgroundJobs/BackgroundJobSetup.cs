@@ -27,5 +27,25 @@ public class BackgroundJobSetup : IConfigureOptions<QuartzOptions>
                     .RepeatForever())
                 .StartNow()
             );
+        
+        ConfigureSecondJob(options);
+    }
+
+    private void ConfigureSecondJob(QuartzOptions options)
+    {
+        var jobKey2 = JobKey.Create(nameof(SlaJob));
+        var now = SystemTime.UtcNow();
+        
+        options
+            .AddJob<SlaJob>(jobBuilder => jobBuilder
+                .WithIdentity(jobKey2))
+            .AddTrigger(trigger => trigger
+                .ForJob(jobKey2)
+                .WithIdentity("user_sla_job", "sla")
+                .WithSimpleSchedule(x => x
+                    .WithIntervalInSeconds(_interval)
+                    .RepeatForever())
+                .StartAt(now.AddSeconds(_interval))
+            );
     }
 }
