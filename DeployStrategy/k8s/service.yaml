@@ -2,6 +2,7 @@
 kind: Service
 metadata:
   name: strategy
+  namespace: deploy-strategy
 spec:
   type: NodePort
   selector:

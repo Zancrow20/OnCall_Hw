@@ -2,19 +2,20 @@
 kind: Deployment
 metadata:
   name: strategy
+  namespace: deploy-strategy
   labels:
-    app.kubernetes.io/name: strategy
+    app: strategy
 spec:
   strategy:
     type: RollingUpdate
   replicas: 10
   selector:
     matchLabels:
-      app.kubernetes.io/name: strategy
+      app: strategy
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: strategy
+        app: strategy
     spec:
       containers:
         - name: strategy

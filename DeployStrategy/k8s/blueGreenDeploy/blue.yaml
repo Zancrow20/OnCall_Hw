@@ -2,6 +2,7 @@
 kind: Deployment
 metadata:
   name: blue
+  namespace: deploy-strategy
   labels:
     app: blue
 spec:
