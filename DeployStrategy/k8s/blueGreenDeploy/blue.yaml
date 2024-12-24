@@ -1,0 +1,42 @@
+﻿apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blue
+  labels:
+    app: blue
+spec:
+  strategy:
+    type: RollingUpdate
+  replicas: 10
+  selector:
+    matchLabels:
+      app: blue
+  template:
+    metadata:
+      labels:
+        app: blue
+    spec:
+      containers:
+        - name: blue-green-strategy
+          image: zancrow20/deploy-strategy:v1
+          ports:
+            - containerPort: 8080
+            - containerPort: 8000
+          livenessProbe:
+            httpGet:
+              path: /healthcheck
+              port: 8080
+          readinessProbe:
+            httpGet:
+              path: /healthcheck
+              port: 8080
+            failureThreshold: 1
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          startupProbe:
+            httpGet:
+              path: /healthcheck
+              port: 8080
+            failureThreshold: 10
+            initialDelaySeconds: 30
+            periodSeconds: 10
