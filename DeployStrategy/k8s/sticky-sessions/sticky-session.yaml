@@ -1,0 +1,43 @@
+﻿apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sticky-session-deployment
+  namespace: sticky-session
+  labels:
+    app: sticky-session
+spec:
+  strategy:
+    type: RollingUpdate
+  replicas: 5
+  selector:
+    matchLabels:
+      app: sticky-session
+  template:
+    metadata:
+      labels:
+        app: sticky-session
+    spec:
+      containers:
+        - name: sticky-session-container
+          image: zancrow20/deploy-strategy:v3
+          ports:
+            - containerPort: 8080
+            - containerPort: 8000
+          livenessProbe:
+            httpGet:
+              path: /healthcheck
+              port: 8080
+          readinessProbe:
+            httpGet:
+              path: /healthcheck
+              port: 8080
+            failureThreshold: 1
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          startupProbe:
+            httpGet:
+              path: /healthcheck
+              port: 8080
+            failureThreshold: 10
+            initialDelaySeconds: 30
+            periodSeconds: 10
