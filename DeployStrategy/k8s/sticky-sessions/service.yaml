@@ -4,7 +4,7 @@ metadata:
   name: sticky-session-service
   namespace: sticky-session
 spec:
-  type: NodePort
+  type: LoadBalancer
   selector:
     app: sticky-session
   ports:

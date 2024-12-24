@@ -8,6 +8,7 @@ metadata:
     nginx.ingress.kubernetes.io/affinity-mode: "balanced"
     nginx.ingress.kubernetes.io/session-cookie-name: "sticky-session-cookie"
     nginx.ingress.kubernetes.io/session-cookie-max-age: "60"
+    nginx.ingress.kubernetes.io/session-cookie-expires: "60"
 spec:
   ingressClassName: nginx
   rules:
